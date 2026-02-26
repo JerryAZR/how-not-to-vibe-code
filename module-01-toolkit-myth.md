@@ -200,11 +200,17 @@ Protect your system. Do not allow global installs.
 When the agent claims the project is complete, do not begin analysis immediately.
 First, use the application as a player would.
 
+> **Alternative:** If you don't have a local project, checkout `933af10d3c3b0a598f5ff47b4655f8e15b9d9d60` to start.
+
+---
+
 #### 8.1 Entry Point
 
 Check whether the project provides a clean and explicit entry point.
 
 For example, `uv run regicide`, or an equivalent documented command.
+
+> **Alternative:** If the agent didn't provide one, checkout `e24d088d19ecf725afdf2bc5fec78193ee160430` to see a fixed entry point.
 
 If no clear entry point is provided:
 
@@ -264,6 +270,8 @@ For each violation, document:
 - The expected behavior
 - The observed behavior
 - Steps to reproduce (if applicable)
+
+> **Alternative:** If you want a pre-made bug tracker template, checkout `800bd70e060eb5a8e376b462efd030f3c72890d9`.
 
 Make a git commit before attempting any fixes.
 
