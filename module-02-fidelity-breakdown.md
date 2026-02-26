@@ -26,9 +26,10 @@ Now we examine the code to understand the root causes.
 
 Ensure you have:
 
-- The git commit from Module 1 (pre-vibe-debugging)
-- Your documented rule violations from Section 8.3
-- The original Regicide rules document
+* The git commit from Module 1 (pre-vibe-debugging)
+    * Use commit `800bd70e` if you prefer to follow along
+* Your documented rule violations from Section 8.3
+* The original Regicide rules document
 
 ### Bugs to Analyze
 

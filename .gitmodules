@@ -1,0 +1,3 @@
+[submodule "regicide-TUI"]
+	path = regicide-TUI
+	url = git@github.com:JerryAZR/regicide-TUI.git
