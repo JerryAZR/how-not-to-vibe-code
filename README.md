@@ -48,6 +48,14 @@ regicide-TUI/   # Terminal-based Regicide game
 
 This project contains a **playable but flawed implementation** with 7 documented bugs that represent realistic vibe coding failures.
 
+> **Note:** The submodule has multiple branches. If you're looking for a
+> specific version or commit and can't find it locally, check the remote branches:
+>
+> ```bash
+> cd regicide-TUI
+> git branch -a
+> ```
+
 ---
 
 ## Course Modules
