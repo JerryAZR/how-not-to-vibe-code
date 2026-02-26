@@ -175,18 +175,18 @@ It often signals a lack of integration-level validation.
 
 ### 2. First Play-through
 
-Once the entry point is ready, play the game.
+Once the entry point is ready, run the application and play the game.
 
-At this stage, we are not inspecting the code.
-We are observing runtime behavior.
+At this stage, do not inspect the code.
+You are observing runtime behavior only.
 
 Questions to consider:
 
-- Does the application start without errors?
+- Does the application start without crashing?
 - Does the UI render consistently?
 - Are controls responsive and predictable?
-- Are game rules enforced correctly?
-- Does state transition behave as expected?
+- Can the game progress through multiple turns?
+- Are rules enforced as written?
 
 With a moderately capable agent, the application will likely:
 
@@ -194,27 +194,61 @@ With a moderately capable agent, the application will likely:
 - Present a plausible UI
 - Allow several initial moves
 
-However, subtle issues often emerge quickly:
+If you encounter blocking issues (crashes, soft-locks, missing UI elements),
+work with the AI agent to resolve them until the game becomes playable end-to-end.
 
-- Rule misinterpretations
-- State inconsistencies
-- Edge-case failures
-- UI-state desynchronization
-- Event handling glitches
-
-Record these observations before reviewing the implementation.
+Do not analyze rule compliance yet.
+The goal of this phase is system stability, not correctness.
 
 ---
 
-### Why This Step Matters
+### 3. Rule Violation Discovery
 
-This phase evaluates:
+Once the game is playable, begin identifying rule violations.
 
-- Integration reasoning
-- Runtime correctness
-- UX coherence
-- Implicit architectural decisions
+For each violation, document:
 
-Unit-level correctness does not guarantee system-level correctness.
+- The rule as written
+- The expected behavior
+- The observed behavior
+- Steps to reproduce (if applicable)
 
-This is the first moment where local optimizations meet real user interaction.
+Make a git commit before attempting any fixes.
+
+---
+
+### 4. Vibe Debugging (Iterative Agent Fixes)
+
+> This phase models real-world AI-assisted development, where users iteratively
+> describe observed issues and accept patch proposals without inspecting
+> architectural integrity.
+
+Now engage the AI agent using the documented rule violations.
+
+Provide the bug report and request fixes.
+
+After the agent responds:
+
+- Does it interpret the bug report correctly?
+- Did the behavior change?
+- Did it move in the correct direction?
+- Did it introduce new bugs?
+- Did it add or modify tests?
+
+It is common for fixes to be partial or to introduce regressions.
+
+It is also common for the agent to:
+- Treat the existing implementation as the source of truth
+- Claim the rule is ambiguous or incorrect
+- Justify behavior that contradicts the written rules
+
+You may iterate a few times, but do not over-optimize.
+This phase is exploratory, not corrective.
+
+---
+
+Once experimentation is complete, rewind to the commit
+prior to any rule-violation fixes.
+
+We will analyze the original defects separately from the
+agent’s iterative patch attempts.
