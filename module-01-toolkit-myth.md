@@ -91,6 +91,42 @@ We are deliberately leaving those decisions to the agent.
 
 ---
 
+### Step 4.1 — Framework Selection
+
+If the agent asks you to choose a TUI framework, accept its recommendation.
+
+Given the requirements, we expect a strong agent to recommend **Textual** (optionally enhanced with `rich`).
+
+If another framework is proposed, do not reject it immediately.
+Instead, examine the reasoning carefully:
+
+- Does it justify the choice relative to "polished" and "intuitive"?
+- Does it consider event-driven interaction?
+- Does it address extensibility?
+
+We are observing reasoning quality, not enforcing a specific answer.
+
+---
+
+### Step 4.2 — Control Scheme
+
+If asked about interaction preferences, choose:
+
+- Arrow-key navigation
+- Enter/space to confirm
+- Optional keyboard shortcuts if suggested
+
+If the agent does not ask about control preferences, observe how it resolves the ambiguity:
+
+- Does it explicitly state its chosen control model?
+- Does it default to numbered input?
+- Does it document assumptions?
+
+The phrase "polished and intuitive" is intentionally vague.
+We are testing how the agent handles underspecified UX constraints.
+
+---
+
 ### Step 5 — Document Every Assumption
 
 As you work through the workflow, record in a notes file:
@@ -118,6 +154,22 @@ Follow through to completion:
 - Execution phase
 
 Do not add extra constraints unless the toolkit explicitly requests clarification.
+
+---
+
+### What We Are Observing
+
+While the agent is building the app, pay attention to:
+
+- Does the agent detect underspecified UX requirements?
+- How does it justify framework choice?
+- Does it separate domain logic from UI?
+- Does it propose testing unprompted?
+- Does "extensible structure" translate into actual architecture?
+- How does it manage dependencies?
+
+We are not trying to force failure.
+We are observing default behaviors under realistic constraints.
 
 ---
 
