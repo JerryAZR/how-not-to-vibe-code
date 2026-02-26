@@ -77,23 +77,9 @@ Learn to identify where and why implementation diverged from specification. Anal
 - Lifecycle Fragmentation
 - Base-Rule Lock-In
 
-### Module 3: Test Authority Failures
+### Module 3+
 
 **Status:** Planned
-
-Observe how agents treat tests — as contractual invariants or constraints to satisfy while minimizing friction.
-
-### Module 4: Architectural Entropy
-
-**Status:** Planned
-
-Identify structural decay patterns: duplicate state, silent fallbacks, premature abstraction, and patch stacking.
-
-### Module 5: Detection and Protection
-
-**Status:** Planned
-
-Practical strategies: red flags, checkpoints, validation gates, and building personal checklists.
 
 ---
 
@@ -111,25 +97,38 @@ Any well-known AI assistant plugin or workflow (superpowers, spec-kit, etc.) —
 
 ## Quick Start
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/JerryAZR/how-not-to-vibe-code.git
-   cd how-not-to-vibe-code
-   ```
+### Option 1: Clone with Submodule (Recommended)
 
-2. Explore the course:
+```bash
+git clone --recurse-submodules https://github.com/JerryAZR/how-not-to-vibe-code.git
+cd how-not-to-vibe-code
+```
+
+### Option 2: If You Forgot the Submodule
+
+```bash
+git clone https://github.com/JerryAZR/how-not-to-vibe-code.git
+cd how-not-to-vibe-code
+git submodule update --init --recursive
+```
+
+---
+
+### After Cloning
+
+1. Explore the course:
    - Read [SYLLABUS.md](SYLLABUS.md) for the full curriculum
    - Start with [module-01-toolkit-myth.md](module-01-toolkit-myth.md)
 
-3. Try the practice project:
+2. Try the practice project:
    ```bash
    cd regicide-TUI
-   pip install -e .
-   regicide
+   uv run regicide
    ```
 
 ---
 
 ## Contributing
 
-This course is a living document. Each module is refined based on student observations and emerging agent behaviors.
+This course is a living document. Each module is refined based on student
+observations and emerging agent behaviors.
