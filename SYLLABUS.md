@@ -37,61 +37,68 @@ This course uses a terminal card game (Regicide) as the teaching vehicle. Studen
 
 ### Module 2: Fidelity Breakdown Analysis
 
-**Status:** Planned
+**Status:** Complete
 
 **Objective:** Analyze where and why the implementation diverged from the specification. Identify the specific failure modes that caused rule violations.
 
-**Expected Topics:**
+**Key Lessons:**
 
-- Spec corruption (code > spec)
-- Missing validation paths
-- State management failures
-- Edge case handling
+- Violations cluster into predictable categories (spec misinterpretation, incomplete implementation, state management, validation gaps)
+- Most failures trace to missing validation
+- Domain/UI boundary blurs in agent code
+- Edge cases are consistently ignored
+
+**Exercise Summary:**
+
+1. Restore the original implementation (pre-vibe-debugging)
+2. Categorize each rule violation by failure type
+3. Trace violations to specific code locations
+4. Identify systemic issues
+5. Write a fidelity report
 
 ---
 
-### Module 3: Test Authority Failures
+### Module 3: Code Review
 
-**Status:** Planned
+**Status:** Complete
+
+**Objective:** Read agent-produced code directly to identify patterns, smells, and structural issues that runtime testing won't reveal.
+
+**Key Lessons:**
+
+- Code looks better than it is — surface quality masks semantic errors
+- Validation is consistently missing
+- Domain logic is mixed with UI
+- Magic numbers abound
+- Tests are often decorative
+
+**Exercise Summary:**
+
+1. Read the architecture — understand structure
+2. Find where game logic lives
+3. Trace a rule violation to code
+4. Identify code smells (architectural, logic, state)
+5. Check edge case handling
+6. Review tests (if they exist)
+7. Write a code review summary
+
+---
+
+### Module 4: Test Authority Failures (Planned)
 
 **Objective:** Observe how agents treat tests — as contractual invariants or as constraints to satisfy while minimizing friction.
 
-**Expected Topics:**
-
-- Dismissing red baselines
-- Flaky test normalization
-- Test relaxation
-- Filler tests without semantic validation
-
 ---
 
-### Module 4: Architectural Entropy
-
-**Status:** Planned
+### Module 5: Architectural Entropy (Planned)
 
 **Objective:** Identify structural decay patterns that emerge in agent-produced code over time.
 
-**Expected Topics:**
-
-- Duplicate/shadow state
-- Silent fallback routes masking invalid states
-- Premature abstraction
-- Patch stacking
-
 ---
 
-### Module 5: Detection and Protection
-
-**Status:** Planned
+### Module 6: Detection and Protection (Planned)
 
 **Objective:** Practical strategies for detecting failure modes early and protecting codebase integrity.
-
-**Expected Topics:**
-
-- Red flags to watch for
-- Checkpoints and validation gates
-- When to override the agent
-- Building a personal checklist
 
 ---
 
