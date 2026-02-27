@@ -68,17 +68,11 @@ This course uses a terminal card game (Regicide) as the teaching vehicle. Studen
 
 - Business logic living in UI callbacks
 - Silent defaults for required domain data
-- Happy path only — no validation
-- Implementation becomes the spec (lost references)
-- Premature abstraction
 
 **Exercise Summary:**
 
 1. Find Trap 1: Business logic in UI
 2. Find Trap 2: Silent defaults
-3. Find Trap 3: No validation
-4. Find Trap 4: Lost spec
-5. Find Trap 5: Premature abstraction
 
 ---
 
