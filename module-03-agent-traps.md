@@ -3,8 +3,9 @@
 ## Objective
 
 Learn to recognize patterns and traps that agents leave in code — the specific
-ways that AI-generated code tends to go wrong. This module focuses on two common
-traps we've observed in this project.
+ways that AI-generated code tends to go wrong. This module uses our example project
+as a case study, but you are encouraged to analyze your own project from Module 1
+using the same lens.
 
 ---
 
@@ -52,6 +53,12 @@ Look in the UI files:
 - Check if game rules (attack power calculations, card validity checks) are inside these handlers
 - Ask: is the rule logic in the handler, or does the handler call a domain function?
 
+**Apply to your project:**
+
+- Do you have event handlers that contain game rule logic?
+- Is there a clear boundary between "user did X" and "the game rule that responds to X"?
+- Can you test game rules without running the UI?
+
 ---
 
 ### Trap 2: Silent Defaults for Required Data
@@ -84,3 +91,21 @@ Look in `src/models/enemy.py`:
 
 This is a trap: the constructor accepts invalid state and patches it instead of
 rejecting it.
+
+**Apply to your project:**
+
+- Do you have constructors where `X | None` is used but `None` is never valid?
+- Do you have `__post_init__` or similar methods that auto-fix missing data?
+- Are domain invariants patched instead of enforced?
+
+---
+
+## The Goal
+
+You now know two common traps. But more importantly, you know how to look for them.
+
+These patterns generalize beyond this project. Every agent-generated codebase
+will have some version of these issues. Your job is to spot them before they
+cause problems.
+
+In the next module, we will explore how agents handle tests.
