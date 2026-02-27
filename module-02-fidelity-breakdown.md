@@ -2,7 +2,10 @@
 
 ## Objective
 
-In Module 1, we produced a playable but unreliable system. Now we analyze where and why the implementation diverged from the specification. This module teaches you to identify the specific failure modes that cause rule violations — not just that they exist, but how they manifest in code.
+In Module 1, we produced a playable but unreliable system. Now we analyze where
+and why the implementation diverged from the specification. This module teaches
+you to identify the specific failure modes that cause rule violations — not just
+that they exist, but how they manifest in code.
 
 ---
 
@@ -10,8 +13,10 @@ In Module 1, we produced a playable but unreliable system. Now we analyze where 
 
 We have two artifacts from Module 1:
 
-1. **The commit before vibe debugging** — The original implementation produced by the toolkit workflow
-2. **Your documented rule violations** — The gaps you discovered between the rules and runtime behavior
+1. **The commit before vibe debugging** — The original implementation produced
+by the toolkit workflow
+2. **Your documented rule violations** — The gaps you discovered between the
+rules and runtime behavior
 
 Now we examine the code to understand the root causes.
 
@@ -21,205 +26,501 @@ Now we examine the code to understand the root causes.
 
 Ensure you have:
 
-- The git commit from Module 1 (pre-vibe-debugging)
-- Your documented rule violations from Section 8.3
-- The original Regicide rules document
+* The git commit from Module 1 (pre-vibe-debugging)
+    * Use commit `800bd70e` if you prefer to follow along
+* Your documented rule violations from Section 8.3
+* The original Regicide rules document
+
+### Bugs to Analyze
+
+The following table summarizes bugs observed in our example project:
+
+| # | Bug | Expected Behavior | Actual Behavior |
+|---|-----|-------------------|------------------|
+| BUG-1 | Missing enemy suit | Player can see enemy suit to plan moves with immunity in mind | Enemy shows only name, ATK, and health, no suit |
+| BUG-2 | Cannot select cards to discard | Player selects which cards to discard during defense | Cards are automatically discarded |
+| BUG-3 | Cannot flip Jester | Press 'j' to flip Jester, discard hand, draw 8 new cards | System warns "No Jester in hand" |
+| BUG-4 | Diamond power not activating | Draw cards equal to rank when playing diamond (max 8) | No draws occur |
+| BUG-5 | Heart power not activating | Playing heart recycles discard pile back to deck | Neither discard nor deck changes |
+| BUG-6 | Played cards not in discard | Played cards added to discard when enemy defeated | Cards are lost forever |
+| BUG-7 | No combo plays | Play multiple same-rank cards (≤10) or pet+card with combined suit powers | Enter plays single card and ends turn |
+
+If you have your own bug list from a different Module 1 experiment, you are encouraged to analyze that instead. The methodology below applies to any set of rule violations.
+
+## Analysis - Learn The Failure Patterns
+
+### How to Read This Section
+
+For each bug, we analyze:
+
+* **What visibly failed**
+* **How the code produced that failure**
+* **What structural mistake enabled it**
+* **How to detect similar failures in your own system**
+
+Your goal is not to memorize these categories.
+
+Your goal is to test whether your own project exhibits the same structural
+patterns — even if the symptoms look different.
 
 ---
 
-## Exercise
+### BUG-1: Missing Enemy Suit
 
-### Step 1 — Restore the Original State
+> Pattern: Model–View Drift
 
-If you haven't already, checkout the commit prior to any rule-violation fixes:
+#### Surface Symptom
 
-```bash
-git log --oneline
-# Find the commit before your vibe debugging attempts
-git checkout <commit-hash>
-```
+Enemy suit exists in rules and affects immunity logic, but is not displayed to
+the player.
 
-Or identify the state you want to analyze.
+#### Code-Level Observation
 
----
+* `Enemy` model contains `_immunity_suit`
+* Combat logic uses this field
+* `EnemyWidget` does not render it
 
-### Step 2 — Categorize Each Violation
+The rule-relevant data exists.
+The UI simply never exposes it.
 
-For each rule violation you documented, classify it by failure type:
+#### Structural Root Cause
 
-**A. Specification Misinterpretation**
+The system separated:
 
-- The agent understood the rule incorrectly
-- Implemented a plausible but wrong mechanic
-- Example: "attack power = card value" instead of "attack power = suit-based formula"
+* **Rule state**
+* **Player-visible state**
 
-**B. Incomplete Implementation**
+Without enforcing that rule-critical data must be observable.
 
-- The rule was understood but not fully coded
-- Edge cases were skipped
-- Example: Basic play works, but special card effects are missing
+The agent optimized for mechanical correctness, not informational completeness.
 
-**C. State Management Failure**
+In interactive systems, **visibility is part of correctness**.
 
-- The agent lost track of game state
-- Variables were not updated correctly
-- Example: Player health decrements incorrectly, or enemy AI state drifts
+A rule that cannot be observed cannot meaningfully guide decisions.
 
-**D. Validation Gap**
+#### Generalizable Diagnostic Questions
 
-- The agent didn't validate inputs or transitions
-- Invalid moves were allowed
-- Example: Playing a card when not enough attack power available
+In your own project:
 
-**E. UI-State Desynchronization**
+* Are there state fields used in logic that never appear in UI?
+* Are there rule-relevant attributes that players must infer indirectly?
+* If a player cannot see it, can they still make optimal decisions?
 
-- The displayed state doesn't match internal state
-- Player sees one thing, game thinks another
-- Example: UI shows enemy as "ready" but internally defeated
+If yes, you likely have Model–View Drift.
 
 ---
 
-### Step 3 — Trace Each Failure to Code
+### BUG-2: Cannot Select Cards to Discard
 
-For each violation:
+> Pattern: Agency Collapse
 
-1. **Find the relevant code** — Locate the function/module handling this rule
-2. **Identify the decision point** — Where did the agent make the wrong choice?
-3. **Analyze the logic** — Is the failure in:
-   - Conditional logic (wrong condition)?
-   - Data transformation (wrong formula)?
-   - State update (missing/incorrect update)?
-   - Missing validation (no check at all)?
+#### Surface Symptom
 
-4. **Document the pattern** — Does this failure match any known failure mode?
+Player does not choose which cards to discard during defense.
+System auto-discards using a greedy algorithm.
 
----
+#### Code-Level Observation
 
-### Step 4 — Look for Underlying Causes
+* `handle_enemy_attack()` directly calls `discard_for_damage()`
+* `discard_for_damage()` sorts hand and auto-removes cards
+* No “Defense Phase”
+* No input loop for discard selection
 
-Beyond individual violations, examine the codebase for systemic issues:
+The architecture contains no representational space for player choice.
 
-**Architectural Red Flags:**
+#### Structural Root Cause
 
-- Is domain logic mixed with UI code?
-- Are rules implemented multiple times (duplication)?
-- Is state scattered across different locations?
-- Are there catch-all branches hiding invalid states?
+The agent reframed:
 
-**Testing Red Flags:**
+> “Player discards cards equal to damage”
 
-- Are there any tests? Do they pass?
-- Do tests validate rules or just object creation?
-- Is there test coverage for edge cases?
+into:
 
-**Spec Handling Red Flags:**
+> “System must compute a valid discard set”
 
-- Does the code reference the rules document?
-- Are magic numbers/constants used without explanation?
-- Is there any validation that inputs match expected rules?
+It converted a decision problem into a deterministic algorithm.
 
----
+This is common when the specification:
 
-### Step 5 — Summarize Findings
+* Describes constraints
+* But does not explicitly encode interaction phases
 
-Create a "Fidelity Report" with:
+The model filled in missing procedural detail with automation.
 
-1. **Violation Summary Table**
+#### Generalizable Diagnostic Questions
 
-| Violation | Category | Location | Root Cause |
-|-----------|----------|----------|------------|
-| Enemy health doesn't reset | State Management | `game.py:142` | Missing state reset on new game |
-| Special cards have no effect | Incomplete | `cards.py:89` | Effect logic not implemented |
+In your own system:
 
-2. **Systemic Issues**
+* Are there rule moments where a player should choose, but the system resolves automatically?
+* Does your state machine explicitly encode decision phases?
+* Is there any rule that says “player decides” but no code path that asks for input?
 
-- List any architectural or testing problems found across the codebase
-
-3. **Root Cause Patterns**
-
-- Which failure types appeared most frequently?
-- Were there any surprising gaps?
+If so, check whether the model silently removed player agency.
 
 ---
 
-## What You'll Observe
+### BUG-3: Cannot Flip Jester
 
-### 1. Spec Corruption Is Common
+> Pattern: Schema Overgeneralization
 
-The most insidious failure mode: the code becomes the specification.
+#### Surface Symptom
 
-- The agent "forgets" the rules document
-- Implementation details drift from written rules
-- When questioned, the agent cites the code as authoritative
+System checks for Jester in hand.
+But Jesters are never created in the deck.
 
-### 2. Validation Is Usually Missing
+#### Code-Level Observation
 
-Most failures trace back to absent or inadequate validation:
+* Flip logic assumes Jester originates in hand
+* `create_tavern_deck()` never instantiates Jester cards
 
-- No checks on player inputs
-- No assertions on state transitions
-- No guard clauses for impossible states
+The agent implemented the action, but not the object lifecycle.
 
-### 3. Domain/UI Boundary Blur
+#### Structural Root Cause
 
-The agent typically:
+The model imported a generic card-game schema:
 
-- Mixes game logic with rendering code
-- Doesn't separate player decisions from state updates
-- Makes UI changes that inadvertently affect game rules
+> Playable cards originate from the main deck and enter hand.
 
-### 4. Edge Cases Are Ignored
+But the rules describe Jesters as side resources.
 
-The "happy path" works. Everything else fails:
+The agent overrode specification details with genre priors.
 
-- First few turns work fine
-- Later game states expose accumulated issues
-- Special conditions (special cards, combo moves) are broken
+This is not a reading failure — it is a pattern substitution failure.
 
----
+#### Generalizable Diagnostic Questions
 
-## Reflection Questions
+In your experiment:
 
-After completing the analysis:
+* Does your system assume conventional mechanics not explicitly stated?
+* Are there special-case entities treated like standard entities?
+* Did the model “normalize” something unusual into a common pattern?
 
-1. Which failure type was most common in your implementation?
-2. Could you trace each violation to a specific code location?
-3. Did any violation surprise you — where the code looked correct but behaved wrongly?
-4. Were there warning signs early in the build that predicted these failures?
-5. How much of the failure was "agent didn't know" vs "agent forgot"?
+When your design deviates from common archetypes, LLMs frequently revert to the
+archetype unless explicitly constrained.
 
 ---
 
-## The Real Lesson
+### BUG-4 & BUG-5: Suit Powers Not Activating
 
-Fidelity breakdown is not random. It follows predictable patterns:
+> Pattern: Integration Fragmentation
 
-- **Validation is the first casualty** — Agents skip checks to "move faster"
-- **Edge cases are ignored** — The happy path works, boundaries fail
-- **Spec fades from view** — Code becomes the reference, not the document
-- **State gets messy** — Updates are incomplete, inconsistent, or duplicated
+#### Surface Symptom
 
-These are not surprises. They are expected failure modes.
+Hearts and Diamonds power functions exist.
+They are never invoked.
 
-Knowing this lets you:
-- Anticipate where failures will occur
-- Add checkpoints before they compound
-- Verify spec compliance proactively
+#### Code-Level Observation
+
+* `resolve_hearts_power()` implemented
+* `resolve_diamonds_power()` implemented
+* `action_play_card()` never calls them
+
+The logic exists in isolation.
+
+#### Structural Root Cause
+
+The model successfully completed subtasks independently, but never performed a
+holistic integration pass.
+
+This is a fragmentation failure:
+
+* Rule logic implemented
+* Action pipeline implemented
+* Wiring between them missing
+
+LLMs rarely perform cross-module integration unless explicitly instructed.
+
+#### Generalizable Diagnostic Questions
+
+In your project:
+
+* Are there functions that look correct but are never called?
+* Do you see “orphaned rule implementations”?
+* Was there a final instruction to integrate all rule hooks?
+
+If not, expect integration fragmentation.
 
 ---
 
-## Next Steps
+### BUG-6: Played Cards Not in Discard
 
-In Module 3, we will explore how agents handle tests — specifically, how they treat test failures, coverage, and the authority of specifications.
+> Pattern: Lifecycle Fragmentation
+
+#### Surface Symptom
+
+Played cards are removed from hand but never stored.
+They effectively disappear.
+
+#### Code-Level Observation
+
+* `hand.pop()` removes card
+* No “table” container
+* Later rule mentions discarding played cards after enemy defeat
+* That lifecycle step was never encoded
+
+The card’s state transitions were distributed across distant rule sections.
+
+#### Structural Root Cause
+
+The model recognized:
+
+* Deck
+* Hand
+* Discard
+
+But not:
+
+* In-play / table zone
+
+Because “table” was narratively described, not structurally defined.
+
+Additionally, lifecycle rules were split across separate rule sections,
+increasing the chance of local omission.
+
+* **Step 1** says "Play a card from your hand onto the table in front of you ..."
+* **Step 3** says "If the enemy is defeated, Place all cards played against the
+enemy in the discard pile."
+
+LLMs exhibit locality bias:
+They strongly weight nearby text during generation.
+
+#### Generalizable Diagnostic Questions
+
+In your experiment:
+
+* Does every entity have a clearly defined lifecycle?
+* Is there a state container for every rule-described location?
+* Are lifecycle transitions described far apart in the spec?
+
+Distributed lifecycle definitions often produce missing state containers.
 
 ---
 
-## Optional: Compare With Another Implementation
+### BUG-7: No Combo Plays
 
-If you have access to a second Regicide implementation (or a student's work from another session), compare:
+> Pattern: Base-Rule Lock-In
 
-- Did the same failure types appear?
-- Were failures in the same locations?
-- Did different toolkits produce different failure patterns?
+#### Surface Symptom
 
-This reinforces that failures are systemic, not stochastic.
+Only one card can be played per turn.
+No combo or companion logic exists.
+
+#### Code-Level Observation
+
+* `action_play_card()` handles exactly one card
+* No multi-selection logic
+* No aggregation abstraction
+
+#### Structural Root Cause
+
+The rules introduce:
+
+> “Play a card…”
+
+Later sections extend this to:
+
+* Same-rank combos
+* Pet + card plays
+* Combined suit powers
+
+The agent locked onto the first minimal definition and hardened it into architecture.
+
+Later rule expansions were treated as descriptive rather than structural.
+
+This is a failure to reopen an early abstraction.
+
+#### Generalizable Diagnostic Questions
+
+In your system:
+
+* Did the agent implement only the simplest valid interpretation of an action?
+* Are there rule expansions that were never folded back into the base mechanic?
+* Does your input model restrict expressiveness compared to the rule space?
+
+If yes, you may be seeing base-rule lock-in.
+
+---
+
+## Cross-Bug Synthesis: What Should You Test in Your Own Project?
+
+After analyzing your own milestone, ask:
+
+1. Did any player decisions get automated?
+2. Are any rule functions implemented but unused?
+3. Are there entities whose full lifecycle is not encoded?
+4. Did early minimal definitions constrain later features?
+5. Did genre assumptions override unusual rules?
+6. Is all rule-relevant information visible to players?
+
+If you cannot answer these questions confidently, investigate.
+
+Do not assume your system is correct because it “mostly works.”
+
+---
+
+## Important: Do Not Accept This Framework Blindly
+
+You should actively test whether:
+
+* Your failures cluster into similar patterns.
+* Or you are observing entirely different root causes.
+
+It is possible your experiment reveals:
+
+* State mutation ordering bugs
+* Hidden coupling between subsystems
+* Spec ambiguity amplification
+* Concurrency drift
+* Persistence inconsistencies
+
+If so, extend the taxonomy.
+
+Module 2 is not about proving this list is universal.
+
+It is about training you to:
+
+> Identify structural fidelity drift beneath surface bugs.
+
+## Controlled Experiment: Neutral Comprehension Probe
+
+### Purpose
+
+Determine whether implementation failures stem from:
+
+* Rule misunderstanding
+  or
+* Architectural drift during incremental construction
+
+This experiment isolates comprehension from implementation.
+
+---
+
+### How to Phrase the Questions
+
+Start a clean session with only the rule document.
+
+Ask **neutral, structural questions** — not bug-directed ones.
+
+Avoid:
+
+* “Can players play multiple cards?”
+* “Does the player choose which cards to discard?”
+
+These steer the model.
+
+Instead, ask:
+
+* What phases exist in a full turn?
+* What actions can the player take during each phase?
+* How are enemy attacks resolved?
+* Where do played cards go throughout their lifecycle?
+* How are special cards introduced and used?
+
+These questions:
+
+* Do not imply something is wrong
+* Force reconstruction of the full system
+* Expose whether the action grammar, state transitions, and lifecycles are understood
+
+This phrasing pattern generalizes to any project.
+
+When auditing your own experiment, always ask:
+
+* What are the phases?
+* What are the player decisions?
+* What are the state transitions?
+* What is the lifecycle of each entity?
+
+---
+
+### Assumed Outcome
+
+If the model reconstructs the system correctly — including combos, discard
+choice, Jester handling, and card lifecycle — then rule comprehension is intact.
+
+That is the expected outcome with sufficiently capable models.
+
+---
+
+### What This Teaches
+
+If comprehension is correct but implementation was wrong, then:
+
+The failure is not semantic misunderstanding.
+
+The failure occurred during incremental code construction.
+
+Specifically:
+
+* Early abstractions hardened into architecture.
+* Later rule refinements were not folded back into core mechanics.
+* Global invariants were not re-evaluated after local changes.
+
+This demonstrates a central property of vibe coding:
+
+> LLMs can reason globally in analysis mode,
+> but drift structurally during step-by-step generation.
+
+The lesson is not about model intelligence.
+
+It is about architectural persistence.
+
+---
+
+### Why This Matters
+
+If rule violations were caused by misunderstanding, the solution would be:
+
+* Better models
+* Better parsing
+* Better prompting
+
+But if violations arise from architectural drift, the solution is:
+
+* Explicit phase encoding
+* Action grammar scaffolding
+* Lifecycle modeling
+* Integration checkpoints
+
+This experiment distinguishes between those two classes of failure.
+
+That distinction underpins the rest of the course.
+
+---
+
+## Module 2 Wrap-Up
+
+In Module 1, we observed rule violations.
+
+In Module 2, we traced those violations back to structural causes.
+
+Across multiple bugs, one pattern emerged:
+
+The model often understood the rules —
+but lost fidelity during incremental construction.
+
+* Abstractions hardened too early.
+* Decision points disappeared.
+* Lifecycles fragmented.
+* Rule logic existed without integration.
+
+The important shift is this:
+
+> These were not random mistakes.
+> They were predictable structural failure modes.
+
+At this point, you should be able to:
+
+* Look past surface bugs
+* Identify where architecture drifted from specification
+* Distinguish misunderstanding from construction failure
+
+If you noticed questionable design patterns while tracing these bugs, that is
+expected. We intentionally focused only on fidelity in this module.
+
+In the next module, we will step back and examine the implementation itself —
+not to fix specific bugs, but to evaluate the structural choices that made those
+bugs likely.
+
+Module 2 closes here:
+You now know how to diagnose fidelity drift.
