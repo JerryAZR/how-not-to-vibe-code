@@ -58,29 +58,27 @@ This course uses a terminal card game (Regicide) as the teaching vehicle. Studen
 
 ---
 
-### Module 3: Code Review
+### Module 3: Agent Traps
 
 **Status:** Complete
 
-**Objective:** Read agent-produced code directly to identify patterns, smells, and structural issues that runtime testing won't reveal.
+**Objective:** Learn to recognize characteristic patterns and traps that agents leave in code — specific failure modes that predictably appear in AI-generated code.
 
 **Key Lessons:**
 
-- Code looks better than it is — surface quality masks semantic errors
-- Validation is consistently missing
-- Domain logic is mixed with UI
-- Magic numbers abound
-- Tests are often decorative
+- Business logic living in UI callbacks
+- Silent defaults for required domain data
+- Happy path only — no validation
+- Implementation becomes the spec (lost references)
+- Premature abstraction
 
 **Exercise Summary:**
 
-1. Read the architecture — understand structure
-2. Find where game logic lives
-3. Trace a rule violation to code
-4. Identify code smells (architectural, logic, state)
-5. Check edge case handling
-6. Review tests (if they exist)
-7. Write a code review summary
+1. Find Trap 1: Business logic in UI
+2. Find Trap 2: Silent defaults
+3. Find Trap 3: No validation
+4. Find Trap 4: Lost spec
+5. Find Trap 5: Premature abstraction
 
 ---
 
